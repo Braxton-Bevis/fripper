@@ -53,6 +53,16 @@ Music is saved to `Music/FRipper` in your user folder unless you choose another 
 
 <p align="center"><img src="docs/media/screenshot-welcome.png" alt="FRipper welcome screen" width="70%"></p>
 
+## Use it from your iPad or phone
+
+FRipper can run on a home PC and be controlled from Safari on your iPad or phone. Add links and watch the queue there, then save finished music straight to the device. Albums and playlists download as a zip and land in the Files app.
+
+1. Install FRipper on the PC that should do the downloads (see above).
+2. In an **administrator** PowerShell in the FRipper folder, run `.\web-setup.ps1`.
+3. Open the address it prints on your iPad, enter the PIN, then tap **Share → Add to Home Screen**.
+
+Access is protected by a PIN, and the firewall only allows your home network and your [Tailscale](https://tailscale.com) devices. Add `-TailnetOnly` to block the home network. Never expose this server to the public internet. To remove it, run `.\web-setup.ps1 -Remove`.
+
 ## Share FRipper
 
 Ready-made graphics are in [`docs/media`](docs/media):

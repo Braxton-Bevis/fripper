@@ -5,7 +5,7 @@
 #   setup.ps1 -ShortcutsOnly  Only (re)create shortcuts for this folder; installs nothing
 #   setup.ps1 -Uninstall      Remove the shortcuts. Music, queue and sign-ins are left in place.
 param([switch]$ShortcutsOnly, [switch]$Uninstall, [switch]$NoDesktopShortcut,
-      [string]$InstallDir = '', [switch]$NoShortcuts)
+      [string]$InstallDir = '', [switch]$NoShortcuts, [switch]$NoLaunch)
 
 $ErrorActionPreference = 'Stop'
 $AppName = 'FRipper'
@@ -186,6 +186,6 @@ New-AppShortcut $StartMenuLink $Root
 if (-not $NoDesktopShortcut) { New-AppShortcut $DesktopLink $Root }
 
 Write-Host "`n$AppName is ready." -ForegroundColor Green
-if ($Root -ne $Source) { Start-Process -FilePath $StartMenuLink }
+if ($Root -ne $Source -and -not $NoLaunch) { Start-Process -FilePath $StartMenuLink }
 Write-Host "Open it from the Start menu or Desktop. To pin it: right-click $AppName in Start, then Pin to taskbar"
 Write-Host "(or right-click its taskbar icon while it is open, then Pin to taskbar)."

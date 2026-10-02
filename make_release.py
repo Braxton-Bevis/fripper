@@ -13,7 +13,7 @@ import zipfile
 ROOT = Path(__file__).resolve().parent
 DIST = ROOT / "dist"
 TOP_LEVEL = ("*.py", "*.ps1", "*.cmd", "*.command", "*.vbs", "README.md", "README.txt", "SOURCE.txt", ".gitignore")
-FOLDERS = {"assets": ("*.png", "*.ico", "*.txt", "*.ps1"), "tests": ("*.py",)}
+FOLDERS = {"assets": ("*.png", "*.ico", "*.txt", "*.ps1"), "tests": ("*.py",), "web": ("*.html", "*.webmanifest")}
 SKIP = {"Launch Lucida.cmd", "Launch Lucida.vbs"}  # Superseded by the FRipper launchers.
 EXECUTABLE = {".command", ".sh"}
 PRIVATE_MARKERS = (b"refresh_token", b"access_token\":", b"TIDAL-DPAPI")

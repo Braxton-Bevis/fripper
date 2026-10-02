@@ -1,0 +1,500 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0b0d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="FRipper">
+<link rel="apple-touch-icon" href="/assets/fripper-icon-1024.png">
+<link rel="icon" href="/assets/fripper.png">
+<link rel="manifest" href="/manifest.webmanifest">
+<title>FRipper</title>
+<style>
+  :root {
+    --bg: #0b0b0d; --panel: #17171a; --raised: #222226; --field: #0e0e10; --line: #2c2c31;
+    --text: #f5f5f7; --muted: #aaaab2; --faint: #707079; --white: #fff;
+    --ok: #8fdcb4; --bad: #f4a5a0; --warn: #e6c488; --info: #a5d8f0;
+    --radius: 14px; --safe-b: env(safe-area-inset-bottom, 0px);
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; background: var(--bg); color: var(--text);
+    font: 16px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  button { cursor: pointer; border: 0; border-radius: 10px; padding: 12px 16px; background: var(--raised);
+           min-height: 44px; font-weight: 600; transition: background .15s, opacity .15s; }
+  button:active { background: #2e2e33; }
+  button.primary { background: var(--white); color: var(--bg); }
+  button.primary:active { background: #d6d6d6; }
+  button.danger { color: var(--bad); }
+  button:disabled { opacity: .35; pointer-events: none; }
+  .hidden { display: none !important; }
+  .muted { color: var(--muted); } .faint { color: var(--faint); }
+  .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .grow { flex: 1; min-width: 0; }
+
+  /* App shell */
+  header { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+           padding: calc(env(safe-area-inset-top, 0px) + 14px) 20px 12px; background: rgba(11,11,13,.92);
+           backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-bottom: 1px solid var(--line); }
+  header img { height: 34px; display: block; }
+  .pills { display: flex; gap: 6px; flex-wrap: wrap; margin-left: auto; }
+  .pill { font-size: 12px; font-weight: 600; padding: 6px 10px; border-radius: 999px; background: var(--raised); color: var(--muted);
+          display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+  .pill i { width: 7px; height: 7px; border-radius: 50%; background: var(--faint); }
+  .pill.ok i { background: var(--ok); } .pill.warn i { background: var(--warn); }
+  .pill.activity { background: var(--white); color: var(--bg); letter-spacing: .06em; }
+  main { max-width: 1180px; margin: 0 auto; padding: 18px 16px calc(96px + var(--safe-b)); }
+  nav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 6; display: flex; justify-content: center; gap: 6px;
+        padding: 8px 12px calc(8px + var(--safe-b)); background: rgba(16,16,19,.94); border-top: 1px solid var(--line);
+        backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+  nav button { flex: 1; max-width: 200px; background: transparent; color: var(--faint); display: flex; flex-direction: column;
+               align-items: center; gap: 3px; font-size: 12px; padding: 6px; }
+  nav button svg { width: 24px; height: 24px; }
+  nav button.on { color: var(--white); }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; }
+  h2 { font-size: 17px; margin: 0 0 12px; }
+  label.field { display: grid; gap: 6px; font-size: 13px; color: var(--muted); }
+  select, input[type=password], input[type=text], textarea { width: 100%; background: var(--field); border: 1px solid var(--line);
+    border-radius: 10px; padding: 11px 12px; min-height: 44px; outline: none; }
+  select:focus, input:focus, textarea:focus { border-color: var(--white); }
+  textarea { min-height: 120px; resize: vertical; font-size: 15px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .switch { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 14px; min-height: 40px; }
+  .switch input { width: 22px; height: 22px; accent-color: #fff; }
+
+  /* Queue view */
+  .layout { display: grid; gap: 16px; }
+  @media (min-width: 900px) { .layout { grid-template-columns: 400px 1fr; align-items: start; }
+    .layout > .side { position: sticky; top: 86px; } }
+  .controls { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .controls button { padding: 10px 6px; font-size: 14px; }
+  .now { margin-top: 14px; display: grid; gap: 8px; }
+  .bar { height: 6px; background: var(--field); border-radius: 99px; overflow: hidden; }
+  .bar > div { height: 100%; background: var(--white); border-radius: 99px; width: 0; transition: width .4s; }
+  .bar.indeterminate > div { width: 35%; animation: slide 1.2s infinite ease-in-out; }
+  @keyframes slide { from { transform: translateX(-100%); } to { transform: translateX(300%); } }
+  .jobs { display: grid; gap: 10px; }
+  .job { display: grid; gap: 8px; padding: 14px 16px; background: var(--panel); border: 1px solid var(--line);
+         border-radius: var(--radius); text-align: left; font-weight: 400; }
+  .job:active { background: #1d1d21; }
+  .job .title { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .job .meta { font-size: 13px; color: var(--faint); }
+  .status { font-size: 12px; font-weight: 700; padding: 4px 9px; border-radius: 999px; background: var(--raised); color: var(--muted); white-space: nowrap; }
+  .status.completed { color: var(--ok); } .status.failed { color: var(--bad); } .status.running { color: var(--info); }
+  .status.interrupted, .status.cancelled { color: var(--warn); }
+  .empty { text-align: center; padding: 46px 20px; color: var(--muted); border: 1px dashed var(--line); border-radius: var(--radius); }
+  .section-head { display: flex; align-items: center; gap: 10px; margin: 2px 2px 12px; }
+  .section-head h2 { margin: 0; }
+
+  /* Sheet (job details) */
+  .scrim { position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 10; }
+  .sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 11; max-height: 86vh; display: flex; flex-direction: column;
+           background: var(--panel); border-top: 1px solid var(--line); border-radius: 18px 18px 0 0;
+           padding: 10px 18px calc(18px + var(--safe-b)); max-width: 820px; margin: 0 auto; }
+  .sheet .grip { width: 40px; height: 5px; border-radius: 9px; background: var(--line); margin: 0 auto 12px; }
+  .log { flex: 1; overflow: auto; background: var(--field); border-radius: 10px; padding: 12px; margin: 12px 0;
+         font: 13px/1.5 ui-monospace, "SF Mono", Menlo, Consolas, monospace; color: var(--muted); white-space: pre-wrap; word-break: break-word; min-height: 160px; }
+  .log a { color: var(--white); font-weight: 700; }
+  .log .ok { color: var(--ok); } .log .err { color: var(--bad); } .log .warn { color: var(--warn); }
+
+  /* Library */
+  .crumbs { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; font-size: 14px; }
+  .crumbs button { min-height: 34px; padding: 6px 10px; font-size: 14px; }
+  .files { display: grid; gap: 8px; }
+  .file { display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; }
+  .file .icon { width: 40px; height: 40px; border-radius: 9px; background: var(--raised); display: grid; place-items: center; flex: none; }
+  .file .icon svg { width: 20px; height: 20px; }
+  .file .name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .file .open { flex: 1; min-width: 0; text-align: left; background: none; padding: 0; font-weight: 400; min-height: 0; }
+  .file a.dl { display: inline-flex; align-items: center; justify-content: center; min-height: 40px; padding: 0 14px; border-radius: 10px;
+               background: var(--white); color: var(--bg); font-weight: 700; text-decoration: none; font-size: 14px; white-space: nowrap; }
+  .file .del { min-height: 40px; padding: 0 12px; background: transparent; color: var(--faint); }
+  .disk { font-size: 13px; color: var(--muted); }
+
+  /* Login */
+  .login { min-height: 100vh; display: grid; place-items: center; padding: 24px; }
+  .login .card { width: min(380px, 100%); text-align: center; display: grid; gap: 16px; padding: 30px 24px; }
+  .login img { width: 220px; margin: 0 auto 6px; display: block; }
+  .login input { text-align: center; font-size: 26px; letter-spacing: .4em; }
+
+  @media (max-width: 640px) {
+    header { padding-left: 16px; padding-right: 16px; }
+    header img { height: 28px; }
+    header .pills .pill:not(.activity) { display: none; }   /* Shown in Setup instead. */
+    .section-head { flex-wrap: wrap; }
+    .section-head #summary { order: 3; flex-basis: 100%; }
+  }
+  .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(86px + var(--safe-b)); z-index: 20;
+           background: var(--white); color: var(--bg); padding: 12px 18px; border-radius: 12px; font-weight: 600;
+           box-shadow: 0 10px 30px rgba(0,0,0,.5); max-width: calc(100% - 32px); }
+  .toast.err { background: var(--bad); }
+</style>
+</head>
+<body>
+
+<!-- Sign-in -->
+<section class="login hidden" id="login">
+  <form class="card" id="login-form">
+    <img src="/assets/fripper-wordmark-192.png" alt="FRipper">
+    <div class="muted">Enter the PIN for this FRipper server.</div>
+    <input id="pin" type="password" inputmode="numeric" autocomplete="current-password" pattern="[0-9]*" maxlength="12" aria-label="PIN">
+    <button class="primary" type="submit">Sign in</button>
+  </form>
+</section>
+
+<!-- App -->
+<div id="app" class="hidden">
+  <header>
+    <img src="/assets/fripper-wordmark-64.png" alt="FRipper">
+    <div class="pills">
+      <span class="pill" id="pill-tidal"><i></i>TIDAL</span>
+      <span class="pill" id="pill-sc"><i></i>SoundCloud</span>
+      <span class="pill" id="pill-lucida"><i></i>Lucida</span>
+      <span class="pill activity" id="activity">READY</span>
+    </div>
+  </header>
+
+  <main>
+    <!-- Queue tab -->
+    <section id="tab-queue">
+      <div class="layout">
+        <div class="side">
+          <div class="card">
+            <h2>Add music</h2>
+            <textarea id="links" placeholder="Paste TIDAL, SoundCloud or other links, one per line" autocapitalize="off" autocorrect="off" spellcheck="false"></textarea>
+            <div class="faint" id="link-count" style="font-size:13px; margin:6px 2px 12px">One link or "Artist - Title" per line.</div>
+            <div class="grid-2">
+              <label class="field">Link type
+                <select id="mode">
+                  <option value="tidal">TIDAL links</option><option value="soundcloud">SoundCloud links</option>
+                  <option value="tracks">Tracks</option><option value="albums">Albums</option><option value="playlist">Playlists</option>
+                </select></label>
+              <label class="field">Audio source
+                <select id="service">
+                  <option value="tidal">TIDAL account</option><option value="soundcloud">SoundCloud</option>
+                  <option value="amazon">Amazon Music</option><option value="qobuz">Qobuz</option><option value="grilledcheese">GrilledCheese</option>
+                </select></label>
+              <label class="field">Format
+                <select id="format">
+                  <option value="original">Original quality</option><option value="flac">FLAC</option><option value="mp3">MP3</option>
+                  <option value="aac">AAC</option><option value="opus">Opus</option><option value="ogg">OGG</option><option value="wav">WAV</option>
+                </select></label>
+              <label class="field">Bitrate
+                <select id="bitrate"><option>320k</option><option>256k</option><option>192k</option><option>128k</option></select></label>
+            </div>
+            <div class="row" style="margin-top:14px">
+              <button class="primary grow" id="add">Add to queue</button>
+              <button id="preview">Preview</button>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top:16px">
+            <div class="controls">
+              <button id="start">Start</button><button id="pause">Pause</button>
+              <button id="stop">Stop</button><button id="retry">Retry</button>
+            </div>
+            <div class="now hidden" id="now">
+              <div class="row"><span class="grow" id="now-text" style="font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap"></span></div>
+              <div class="bar" id="now-bar"><div></div></div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="section-head">
+            <h2>Your queue</h2><span class="faint grow" id="summary" style="font-size:14px"></span>
+            <button id="clear" style="min-height:36px; padding:6px 12px; font-size:14px; margin-left:auto">Clear completed</button>
+          </div>
+          <div class="jobs" id="jobs"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Library tab -->
+    <section id="tab-library" class="hidden">
+      <div class="section-head"><h2>Library</h2><span class="grow"></span><span class="disk" id="disk"></span></div>
+      <div class="muted" style="font-size:14px; margin:0 2px 14px">Download finished music to this device. Folders download as a zip. Saved files appear in the Files app under Downloads.</div>
+      <div class="crumbs" id="crumbs"></div>
+      <div class="files" id="files"></div>
+    </section>
+
+    <!-- Setup tab -->
+    <section id="tab-setup" class="hidden">
+      <div class="layout" style="grid-template-columns: 1fr">
+        <div class="card">
+          <h2>Accounts and sources</h2>
+          <div class="pills" id="setup-pills" style="margin:0 0 14px"></div>
+          <p class="muted" style="margin-top:0">These run on the FRipper server. For TIDAL, open the sign-in link that appears in the job details and approve it on this device.</p>
+          <div class="row">
+            <button class="primary" id="connect-tidal">Connect TIDAL</button>
+            <button id="setup-lucida">Set up Lucida</button>
+            <button id="diagnostics">Diagnostics</button>
+          </div>
+        </div>
+        <div class="card">
+          <h2>Download options</h2>
+          <label class="switch"><input type="checkbox" id="keep-original"> Keep original after converting</label>
+          <label class="switch"><input type="checkbox" id="flat"> Flat folders (no artist/album folders)</label>
+          <p class="faint" style="font-size:14px; margin-bottom:0">Server music folder: <span id="output"></span></p>
+        </div>
+        <div class="card">
+          <h2>This device</h2>
+          <p class="muted" style="margin-top:0">Add FRipper to your Home Screen: tap Share, then <b>Add to Home Screen</b>.</p>
+          <button id="logout">Sign out</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <nav>
+    <button class="on" data-tab="queue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Queue</button>
+    <button data-tab="library"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>Library</button>
+    <button data-tab="setup"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.6 1.6 0 0 0-1-1.5 1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/></svg>Setup</button>
+  </nav>
+</div>
+
+<div class="scrim hidden" id="scrim"></div>
+<div class="sheet hidden" id="sheet" role="dialog" aria-modal="true">
+  <div class="grip"></div>
+  <div class="row"><strong class="grow" id="sheet-title" style="font-size:18px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap"></strong><span class="status" id="sheet-status"></span></div>
+  <div class="log" id="sheet-log"></div>
+  <div class="row">
+    <button class="danger" id="sheet-remove">Remove</button>
+    <span class="grow"></span>
+    <button class="primary" id="sheet-close">Done</button>
+  </div>
+</div>
+<div class="toast hidden" id="toast"></div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const SOURCES = { tidal: "TIDAL", soundcloud: "SoundCloud", amazon: "Amazon", qobuz: "Qobuz", grilledcheese: "GrilledCheese" };
+const KINDS = { tracks: "Tracks", albums: "Album", playlist: "Playlist", setup: "Setup", doctor: "Check", tidal_login: "Sign-in" };
+let state = null, selected = null, libPath = "", pollTimer = null, settingsLoaded = false, tab = "queue";
+
+async function api(path, body) {
+  const options = body === undefined ? { credentials: "same-origin" }
+    : { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json", "X-FRipper": "1" }, body: JSON.stringify(body) };
+  const response = await fetch(path, options);
+  const data = await response.json().catch(() => ({}));
+  if (response.status === 401) { showLogin(); throw new Error(data.error || "Sign in with your PIN."); }
+  if (!response.ok) throw new Error(data.error || response.statusText);
+  return data;
+}
+function toast(message, error) {
+  const t = $("toast"); t.textContent = message; t.className = "toast" + (error ? " err" : "");
+  clearTimeout(toast.timer); toast.timer = setTimeout(() => t.classList.add("hidden"), error ? 6000 : 2600);
+}
+const run = (fn) => async (...args) => { try { await fn(...args); } catch (e) { toast(e.message, true); } };
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const size = (n) => n == null ? "" : n > 1e9 ? (n / 1e9).toFixed(1) + " GB" : n > 1e6 ? (n / 1e6).toFixed(1) + " MB" : Math.max(1, Math.round(n / 1e3)) + " KB";
+
+/* ---- session ---- */
+function showLogin() { $("app").classList.add("hidden"); $("login").classList.remove("hidden"); clearTimeout(pollTimer); setTimeout(() => $("pin").focus(), 50); }
+function showApp() { $("login").classList.add("hidden"); $("app").classList.remove("hidden"); poll(); }
+$("login-form").addEventListener("submit", run(async (event) => {
+  event.preventDefault();
+  try { await api("/api/login", { pin: $("pin").value }); $("pin").value = ""; showApp(); }
+  catch (e) { $("pin").select(); throw e; }
+}));
+$("logout").onclick = run(async () => { await api("/api/logout", {}); showLogin(); });
+
+/* ---- tabs ---- */
+document.querySelectorAll("nav button").forEach((button) => button.onclick = () => {
+  tab = button.dataset.tab;
+  document.querySelectorAll("nav button").forEach((b) => b.classList.toggle("on", b === button));
+  ["queue", "library", "setup"].forEach((name) => $("tab-" + name).classList.toggle("hidden", name !== tab));
+  if (tab === "library") loadLibrary(libPath).catch((e) => toast(e.message, true));
+  window.scrollTo(0, 0);
+});
+
+/* ---- add music ---- */
+function classify(text) {
+  const lines = text.split(/\n/).map((l) => l.trim()).filter((l) => l && !l.startsWith("#"));
+  if (!lines.length) return [null, 0];
+  const hosts = lines.map((l) => (l.match(/^https?:\/\/([^/\s]+)/i) || [, ""])[1].toLowerCase());
+  if (hosts.every((h) => h.endsWith("tidal.com"))) return ["tidal", lines.length];
+  if (hosts.every((h) => h.endsWith("soundcloud.com"))) return ["soundcloud", lines.length];
+  return [null, lines.length];
+}
+function syncMode() {
+  if ($("mode").value === "soundcloud") $("service").value = "soundcloud";
+  else if ($("mode").value === "tidal" && $("service").value === "soundcloud") $("service").value = "tidal";
+  $("preview").disabled = !["tidal", "soundcloud", "playlist"].includes($("mode").value);
+  $("bitrate").disabled = ["original", "flac", "wav"].includes($("format").value);
+}
+$("links").addEventListener("input", () => {
+  const [service, count] = classify($("links").value);
+  const noun = service === "tidal" ? "TIDAL link" : service === "soundcloud" ? "SoundCloud link" : "item";
+  $("link-count").textContent = count ? `${count} ${noun}${count === 1 ? "" : "s"}` : 'One link or "Artist - Title" per line.';
+  if (service && $("mode").value !== service) { $("mode").value = service; syncMode(); }
+});
+$("mode").onchange = syncMode;
+$("format").onchange = syncMode;
+$("service").onchange = () => {
+  if ($("service").value === "soundcloud") $("mode").value = "soundcloud";
+  else if ($("mode").value === "soundcloud") $("mode").value = $("service").value === "tidal" ? "tidal" : "tracks";
+  syncMode();
+};
+const add = (preview) => run(async () => {
+  const result = await api("/api/add", { text: $("links").value, mode: $("mode").value, service: $("service").value,
+    format: $("format").value, bitrate: $("bitrate").value, preview });
+  if (!preview) { $("links").value = ""; $("link-count").textContent = 'One link or "Artist - Title" per line.'; }
+  toast(`Added ${result.ids.length} ${preview ? "preview" : "job"}${result.ids.length === 1 ? "" : "s"}. Tap Start when ready.`);
+  await refresh();
+});
+$("add").onclick = add(false);
+$("preview").onclick = add(true);
+
+/* ---- controls ---- */
+const control = (action, message) => run(async () => { await api("/api/" + action, {}); if (message) toast(message); await refresh(); });
+$("start").onclick = control("start", "Queue started.");
+$("pause").onclick = run(async () => { await api("/api/pause", {}); toast(state && state.paused ? "Queue resumed." : "Pausing after the current job."); await refresh(); });
+$("stop").onclick = control("stop", "Stopping the current job.");
+$("retry").onclick = control("retry", "Failed jobs requeued. Tap Start to run them.");
+$("clear").onclick = control("clear", "Completed jobs cleared. Music files are kept.");
+const utility = (kind, message) => run(async () => {
+  const result = await api("/api/utility", { kind }); toast(message); await refresh();
+  if (result.ids && result.ids[0]) openSheet(result.ids[0]);
+});
+$("connect-tidal").onclick = utility("tidal_login", "TIDAL sign-in started. Open the link shown in the details.");
+$("setup-lucida").onclick = utility("setup", "Lucida setup started.");
+$("diagnostics").onclick = utility("doctor", "Diagnostics started.");
+const saveSettings = run(async () => {
+  await api("/api/settings", { service: $("service").value, format: $("format").value, bitrate: $("bitrate").value,
+    keep_original: $("keep-original").checked, flat: $("flat").checked });
+  toast("Saved.");
+});
+$("keep-original").onchange = saveSettings;
+$("flat").onchange = saveSettings;
+
+/* ---- rendering ---- */
+function pill(id, cls, text) { const p = $(id); p.className = "pill " + cls; p.lastChild.textContent = text; }
+function render() {
+  const s = state, jobs = s.jobs;
+  if (!settingsLoaded) {
+    settingsLoaded = true;
+    $("service").value = s.settings.service || "tidal"; $("format").value = s.settings.format || "original";
+    $("bitrate").value = s.settings.bitrate || "320k";
+    $("mode").value = s.settings.service === "soundcloud" ? "soundcloud" : "tidal";
+    $("keep-original").checked = !!s.settings.keep_original; $("flat").checked = !!s.settings.flat; syncMode();
+  }
+  pill("pill-tidal", !s.windows ? "" : s.tidal_connected ? "ok" : s.ready.tidal_ready ? "" : "warn",
+       !s.windows ? "TIDAL Windows only" : s.tidal_connected ? "TIDAL connected" : "TIDAL not connected");
+  pill("pill-sc", s.ready.soundcloud_ready ? "ok" : "warn", "SoundCloud");
+  pill("pill-lucida", s.ready.client_ready ? "ok" : "warn", "Lucida");
+  $("setup-pills").innerHTML = ["pill-tidal", "pill-sc", "pill-lucida"].map((id) => $(id).outerHTML.replace(/ id="[^"]+"/, "")).join("");
+  $("connect-tidal").textContent = s.tidal_connected ? "Reconnect TIDAL" : "Connect TIDAL";
+  const active = jobs.find((j) => j.id === s.active_id);
+  const queued = jobs.filter((j) => j.status === "queued").length;
+  const done = jobs.filter((j) => j.status === "completed").length;
+  const failed = jobs.filter((j) => ["failed", "interrupted", "cancelled"].includes(j.status)).length;
+  const working = active && ["setup", "doctor", "tidal_login"].includes(active.kind) ? "WORKING" : "DOWNLOADING";
+  $("activity").textContent = active && s.paused ? "PAUSING" : active ? working : s.paused && queued ? "PAUSED" : "READY";
+  $("summary").textContent = jobs.length ? `${queued} queued · ${done} complete${failed ? ` · ${failed} need attention` : ""}` : "";
+  $("start").disabled = !(queued && (!s.running || s.paused));
+  $("pause").textContent = s.paused && (queued || active) ? "Resume" : "Pause";
+  $("pause").disabled = !((s.paused && (queued || active)) || active || (s.running && !s.paused));
+  $("stop").disabled = !active; $("retry").disabled = !failed; $("clear").disabled = !done;
+  // Now downloading
+  $("now").classList.toggle("hidden", !active);
+  if (active) {
+    const p = active.progress;
+    $("now-text").textContent = p ? `${active.label} · ${p.done} of ${p.total}${p.current ? " · " + p.current : ""}` : `${active.label} · working…`;
+    $("now-bar").classList.toggle("indeterminate", !p);
+    $("now-bar").firstElementChild.style.width = p ? `${(100 * p.done / Math.max(p.total, 1)).toFixed(1)}%` : "";
+  }
+  // Job cards
+  $("jobs").innerHTML = jobs.length ? jobs.map((j) => {
+    const p = j.progress, pct = p ? (100 * p.done / Math.max(p.total, 1)).toFixed(1) : 0;
+    const source = j.service ? SOURCES[j.service] || j.service : "";
+    return `<button class="job" data-id="${esc(j.id)}">
+      <div class="row"><span class="title grow">${esc(j.label)}</span><span class="status ${esc(j.status)}">${esc(j.status_label)}</span></div>
+      <div class="meta">${[source, KINDS[j.kind] || j.kind, p ? `${p.done}/${p.total}` : "", j.preview ? "Preview" : ""].filter(Boolean).map(esc).join(" · ")}</div>
+      ${j.status === "running" && p ? `<div class="bar"><div style="width:${pct}%"></div></div>` : ""}
+    </button>`;
+  }).join("") : `<div class="empty"><strong style="color:var(--text)">Build your first queue</strong><br><br>Paste links, tap Add to queue, then Start.</div>`;
+  document.querySelectorAll(".job").forEach((el) => el.onclick = () => openSheet(el.dataset.id));
+  $("output").textContent = s.output;
+  if (s.disk) $("disk").textContent = `${size(s.disk.free)} free on server`;
+  if (s.notice && s.notice !== render.notice) { render.notice = s.notice; toast(s.notice); }
+  renderSheet();
+}
+function logHtml(lines) {
+  return lines.map((line) => {
+    const cls = /FAILED|RATE LIMIT|[Ee]rror|Could not|not available|blocked/.test(line) ? "err"
+      : /Partial|Stopped|interrupted|unattempted/.test(line) ? "warn"
+      : /saved |Saved |already complete|connected|Summary: |Preview complete/.test(line) ? "ok" : "";
+    const html = esc(line).replace(/https:\/\/[^\s<]+/g, (url) => `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`);
+    return cls ? `<span class="${cls}">${html}</span>` : html;
+  }).join("\n");
+}
+function openSheet(id) { selected = id; $("scrim").classList.remove("hidden"); $("sheet").classList.remove("hidden"); refresh(); }
+function closeSheet() { selected = null; $("scrim").classList.add("hidden"); $("sheet").classList.add("hidden"); }
+$("scrim").onclick = closeSheet; $("sheet-close").onclick = closeSheet;
+$("sheet-remove").onclick = run(async () => { await api("/api/remove", { ids: [selected] }); closeSheet(); toast("Removed from the queue."); await refresh(); });
+function renderSheet() {
+  if (!selected || !state) return;
+  const job = state.jobs.find((j) => j.id === selected);
+  if (!job) return closeSheet();
+  $("sheet-title").textContent = job.label;
+  $("sheet-status").textContent = job.status_label; $("sheet-status").className = "status " + job.status;
+  $("sheet-remove").disabled = job.id === state.active_id;
+  const lines = job.logs && job.logs.length ? job.logs : [job.status === "queued" ? "Waiting in the queue. Tap Start to begin." : "No output yet."];
+  const log = $("sheet-log"), html = logHtml(lines);
+  if (log.dataset.html !== html) {
+    const follow = log.scrollTop + log.clientHeight >= log.scrollHeight - 30 || log.dataset.id !== job.id;
+    log.innerHTML = html; log.dataset.html = html; log.dataset.id = job.id;
+    if (follow) log.scrollTop = log.scrollHeight;
+  }
+}
+
+/* ---- library ---- */
+const ICONS = {
+  folder: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>',
+  audio: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg>',
+  file: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/></svg>',
+};
+async function loadLibrary(path) {
+  const data = await api("/api/library?path=" + encodeURIComponent(path));
+  libPath = data.path;
+  const parts = libPath ? libPath.split("/") : [];
+  $("crumbs").innerHTML = `<button data-path="">Music</button>` + parts.map((part, i) =>
+    `<span class="faint">/</span><button data-path="${esc(parts.slice(0, i + 1).join("/"))}">${esc(part)}</button>`).join("");
+  $("crumbs").querySelectorAll("button").forEach((b) => b.onclick = run(() => loadLibrary(b.dataset.path)));
+  $("files").innerHTML = data.entries.length ? data.entries.map((e) => `
+    <div class="file">
+      <span class="icon">${ICONS[e.type] || ICONS.file}</span>
+      <button class="open" ${e.type === "folder" ? `data-open="${esc(e.path)}"` : "disabled"}>
+        <div class="name">${esc(e.name)}</div>
+        <div class="faint" style="font-size:13px">${e.type === "folder" ? `${e.tracks} track${e.tracks === 1 ? "" : "s"} · ` : ""}${size(e.size)}</div>
+      </button>
+      <a class="dl" href="/download?path=${encodeURIComponent(e.path)}" download>${e.type === "folder" ? "Zip" : "Save"}</a>
+      <button class="del" data-del="${esc(e.path)}" aria-label="Delete from server">✕</button>
+    </div>`).join("")
+    : `<div class="empty">${data.missing ? "Nothing downloaded yet." : "This folder is empty."}</div>`;
+  $("files").querySelectorAll("[data-open]").forEach((b) => b.onclick = run(() => loadLibrary(b.dataset.open)));
+  $("files").querySelectorAll("[data-del]").forEach((b) => b.onclick = run(async () => {
+    if (!confirm(`Delete "${b.dataset.del.split("/").pop()}" from the server? Copies already saved on your devices are kept.`)) return;
+    await api("/api/library/delete", { path: b.dataset.del }); toast("Deleted from the server."); await loadLibrary(libPath);
+  }));
+}
+
+/* ---- polling ---- */
+async function refresh() {
+  state = await api("/api/state" + (selected ? "?job=" + encodeURIComponent(selected) : ""));
+  render();
+}
+async function poll() {
+  clearTimeout(pollTimer);
+  try { if (!document.hidden) await refresh(); } catch (e) { if (!/Sign in/.test(e.message)) toast("Can't reach the FRipper server. Retrying…", true); }
+  if (!$("app").classList.contains("hidden")) pollTimer = setTimeout(poll, state && state.active_id ? 1500 : 3000);
+}
+document.addEventListener("visibilitychange", () => { if (!document.hidden && !$("app").classList.contains("hidden")) poll(); });
+api("/api/session").then((s) => s.signed_in ? showApp() : showLogin()).catch(() => showLogin());
+</script>
+</body>
+</html>
