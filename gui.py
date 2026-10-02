@@ -394,7 +394,8 @@ class LucidaDesktop(tk.Tk):
         ttk.Label(queue_header, textvariable=self.queue_summary, style="Field.TLabel").grid(row=0, column=1, sticky="w", padx=(s(10), 0))
         self.remove_button = ttk.Button(queue_header, text="Remove", command=self._remove)
         self.remove_button.grid(row=0, column=2, padx=(s(6), 0))
-        ttk.Button(queue_header, text="Clear completed", command=self._clear_completed).grid(row=0, column=3, padx=(s(6), 0))
+        self.clear_button = ttk.Button(queue_header, text="Clear completed", command=self._clear_completed)
+        self.clear_button.grid(row=0, column=3, padx=(s(6), 0))
         self.tree = ttk.Treeview(queue_card, columns=("label", "source", "kind", "progress", "status"), show="headings", selectmode="extended", height=7)
         for column, heading, width, stretch in (("label", "MUSIC / TASK", 240, True), ("source", "SOURCE", 84, False),
                                                 ("kind", "TYPE", 66, False), ("progress", "PROGRESS", 74, False),
@@ -783,8 +784,8 @@ class LucidaDesktop(tk.Tk):
             for line in lines:
                 self.log.insert("end", line + "\n", self._log_tag(line) or ())
             self.log.configure(state="disabled")
-            if follow:
-                self.log.see("end")
+            if follow and job:
+                self.log.see("end")  # Follow live output; help text reads from the top.
             self._log_key = key
 
     def _render_status(self, snapshot):
@@ -864,6 +865,7 @@ class LucidaDesktop(tk.Tk):
                                     state="normal" if paused and (queued or active) or active or (snapshot.get("running") and not paused) else "disabled")
         self.stop_button.configure(state="normal" if active else "disabled")
         self.retry_button.configure(state="normal" if failed else "disabled")
+        self.clear_button.configure(state="normal" if done else "disabled")
         self.remove_button.configure(state="normal" if self.tree.selection() else "disabled")
         self._render_log()
 

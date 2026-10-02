@@ -83,7 +83,7 @@ public static class FRipperWordmark {
 }
 '@
 $source = Join-Path $PSScriptRoot 'fundravers-logo.png'
-foreach ($height in 32, 40, 48, 64) {
+foreach ($height in 32, 40, 48, 64, 192) {   # 192: docs and marketing art
     $target = Join-Path $PSScriptRoot "fripper-wordmark-$height.png"
     [FRipperWordmark]::Build($source, $target, $height)
     Write-Host "Wrote $target"

@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>FRipper Artboards</title>
+<!-- Source for docs/media/*.png. Render with: .venv\Scripts\python.exe docs\design\render.py -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  :root {
+    --bg: #0b0b0d; --panel: #17171a; --raised: #222226; --line: #2c2c31;
+    --text: #f5f5f7; --muted: #aaaab2; --faint: #707079; --white: #ffffff;
+    --ok: #8fdcb4;
+    --display: "Segoe UI Black", "Segoe UI", system-ui, sans-serif;
+    --body: "Segoe UI", system-ui, sans-serif;
+    --semi: "Segoe UI Semibold", "Segoe UI", system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body { background: #444; padding: 40px; display: flex; flex-direction: column; gap: 40px; align-items: flex-start;
+         font-family: var(--body); color: var(--text); }
+  .artboard { position: relative; overflow: hidden; background: var(--bg); flex: none; }
+  /* Subtle depth: a soft white glow and a fine grid, both very low contrast. */
+  .artboard::before { content: ""; position: absolute; inset: 0; pointer-events: none;
+    background:
+      radial-gradient(900px 600px at 78% 30%, rgba(255,255,255,.07), transparent 60%),
+      linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px) 0 0 / 48px 48px,
+      linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px) 0 0 / 48px 48px; }
+  .artboard > * { position: relative; }
+  .wordmark { display: block; height: auto; }
+  .eyebrow { font: 600 15px/1 var(--semi); letter-spacing: .32em; text-transform: uppercase; color: var(--muted); }
+  .headline { font-family: var(--display); letter-spacing: -.02em; line-height: .95; color: var(--white); }
+  .lede { color: var(--muted); line-height: 1.45; }
+  .chip { display: inline-flex; align-items: center; gap: 10px; padding: 10px 16px; border: 1px solid var(--line);
+          background: rgba(255,255,255,.03); color: var(--text); font: 15px/1 var(--semi); border-radius: 999px; }
+  .chip::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--ok); }
+  .cta { display: inline-flex; align-items: center; gap: 14px; background: var(--white); color: var(--bg);
+         font: 20px/1 var(--semi); padding: 18px 26px; border-radius: 6px; }
+  .cta svg { width: 22px; height: 22px; }
+  .window { border-radius: 12px; overflow: hidden; border: 1px solid #3a3a40;
+            box-shadow: 0 40px 90px rgba(0,0,0,.65), 0 0 0 1px rgba(255,255,255,.04); background: var(--panel); }
+  .window .bar { height: 34px; display: flex; align-items: center; gap: 8px; padding: 0 14px; background: #1c1c20;
+                 border-bottom: 1px solid #2a2a2f; font: 13px var(--semi); color: var(--faint); }
+  .window .bar i { width: 11px; height: 11px; border-radius: 50%; background: #3a3a40; display: block; }
+  .window .bar span { margin-left: 10px; }
+  .window img { display: block; width: 100%; }
+  .steps { display: grid; gap: 34px; align-content: start; }
+  .step { display: grid; grid-template-columns: 56px 1fr; gap: 18px; align-items: start; }
+  .step b { width: 56px; height: 56px; border-radius: 50%; background: var(--white); color: var(--bg);
+            display: grid; place-items: center; font: 26px var(--display); }
+  .step h3 { font: 26px/1.15 var(--semi); color: var(--white); margin: 4px 0 6px; }
+  .step p { color: var(--muted); font-size: 19px; line-height: 1.4; }
+  .url { font: 22px var(--semi); color: var(--text); letter-spacing: .01em; }
+  .qr { background: #fff; padding: 14px; border-radius: 8px; display: inline-block; }
+  .qr img, .qr canvas { display: block; }
+  .rule { height: 1px; background: var(--line); }
+  .icon { border-radius: 22%; box-shadow: 0 20px 50px rgba(0,0,0,.6); }
+
+  /* 1. Repo banner and GitHub social preview */
+  #banner { width: 1280px; height: 640px; padding: 52px 0 0 80px; }
+  #banner .copy { width: 540px; }
+  #banner .wordmark { width: 400px; margin: 22px 0 24px; }
+  #banner .headline { font-size: 64px; }
+  #banner .lede { font-size: 22px; margin: 18px 0 26px; }
+  #banner .chips { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 28px; }
+  #banner .window { position: absolute; left: 700px; top: 92px; width: 760px; transform: perspective(1800px) rotateY(-9deg) rotateX(2deg); }
+  #banner .platforms { color: var(--faint); font: 16px var(--semi); margin-left: 18px; }
+
+  /* 2. Social poster, 4:5 */
+  #poster { width: 1080px; height: 1350px; padding: 90px 90px 0; text-align: center; }
+  #poster .wordmark { width: 520px; margin: 34px auto 38px; }
+  #poster .headline { font-size: 104px; }
+  #poster .lede { font-size: 28px; max-width: 760px; margin: 28px auto 0; }
+  #poster .window { width: 980px; margin: 64px auto 0; }
+  #poster .foot { position: absolute; left: 0; right: 0; bottom: 0; height: 170px; display: flex; align-items: center;
+                  justify-content: space-between; padding: 0 90px; background: linear-gradient(transparent, var(--bg) 35%); }
+
+  /* 3. Printable flyer, US Letter at 150 dpi */
+  #flyer { width: 1275px; height: 1650px; padding: 110px 110px 0; }
+  #flyer .top { display: flex; justify-content: space-between; align-items: center; }
+  #flyer .wordmark { width: 380px; }
+  #flyer .headline { font-size: 116px; margin-top: 90px; }
+  #flyer .lede { font-size: 30px; margin: 30px 0 70px; max-width: 900px; }
+  #flyer .cols { display: grid; grid-template-columns: 1.15fr 1fr; gap: 70px; }
+  #flyer .features { display: grid; gap: 22px; align-content: start; }
+  #flyer .feature { border-left: 3px solid var(--white); padding: 4px 0 4px 22px; }
+  #flyer .feature h4 { font: 24px var(--semi); color: var(--white); margin-bottom: 6px; }
+  #flyer .feature p { color: var(--muted); font-size: 19px; line-height: 1.4; }
+  #flyer .bottom { position: absolute; left: 110px; right: 110px; bottom: 100px; display: flex; gap: 46px; align-items: center;
+                   padding-top: 54px; border-top: 1px solid var(--line); }
+  #flyer .bottom h2 { font: 44px/1.05 var(--display); color: var(--white); margin-bottom: 14px; }
+  #flyer .bottom p { color: var(--muted); font-size: 20px; margin-top: 10px; }
+
+  /* 4. Vertical story, 9:16 */
+  #story { width: 1080px; height: 1920px; padding: 150px 90px 0; text-align: center; }
+  #story .icon { width: 220px; height: 220px; }
+  #story .wordmark { width: 600px; margin: 70px auto 0; }
+  #story .headline { font-size: 120px; margin-top: 90px; }
+  #story .lede { font-size: 32px; margin: 34px auto 0; max-width: 820px; }
+  #story .window { width: 1000px; height: 560px; margin: 80px auto 0;
+                  -webkit-mask-image: linear-gradient(#000 70%, transparent); mask-image: linear-gradient(#000 70%, transparent); }
+  #story .foot { position: absolute; left: 0; right: 0; bottom: 130px; display: grid; justify-items: center; gap: 26px; }
+  #story .swipe { color: var(--faint); font: 20px var(--semi); letter-spacing: .3em; text-transform: uppercase; }
+
+  /* 5. Brand sheet */
+  #brand { width: 1600px; height: 1000px; padding: 80px; display: grid; grid-template-columns: 1fr 1fr; gap: 60px; }
+  #brand h2 { font: 15px var(--semi); letter-spacing: .3em; text-transform: uppercase; color: var(--faint); margin-bottom: 22px; }
+  #brand .tile { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 40px; }
+  #brand .swatches { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  #brand .swatch { border-radius: 10px; border: 1px solid var(--line); overflow: hidden; }
+  #brand .swatch div { height: 110px; }
+  #brand .swatch p { padding: 12px 14px; font: 15px var(--semi); background: var(--panel); }
+  #brand .swatch small { display: block; color: var(--faint); font: 13px var(--body); margin-top: 3px; }
+  #brand .type .big { font: 72px/1 var(--display); color: var(--white); }
+  #brand .type .mid { font: 28px var(--semi); margin-top: 18px; }
+  #brand .type .small { font: 19px var(--body); color: var(--muted); margin-top: 10px; }
+
+  /* 6. How it works strip */
+  #steps { width: 1280px; height: 330px; padding: 56px 80px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; }
+  #steps .step { grid-template-columns: 1fr; gap: 0; align-content: start; border-top: 2px solid var(--white); padding-top: 30px; }
+  #steps .step b { margin-bottom: 26px; }
+</style>
+</head>
+<body>
+
+<!-- 1. Banner -->
+<section class="artboard" id="banner">
+  <div class="copy">
+    <div class="eyebrow">Fund Ravers presents</div>
+    <img class="wordmark" src="../../assets/fripper-wordmark-192.png" alt="FRipper">
+    <h1 class="headline">Your music.<br>One queue.</h1>
+    <p class="lede">Paste links from TIDAL, SoundCloud and more. FRipper queues them and saves every track in original quality.</p>
+    <div class="chips"><span class="chip">TIDAL</span><span class="chip">SoundCloud</span><span class="chip">Amazon Music</span><span class="chip">Qobuz</span></div>
+    <span class="cta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M6 10l6 6 6-6M4 21h16"/></svg>Free download</span>
+    <span class="platforms">Windows · macOS</span>
+  </div>
+  <div class="window"><div class="bar"><i></i><i></i><i></i><span>FRipper</span></div><img src="../media/screenshot-queue.png" alt=""></div>
+</section>
+
+<!-- 2. Poster -->
+<section class="artboard" id="poster">
+  <div class="eyebrow">Fund Ravers presents</div>
+  <img class="wordmark" src="../../assets/fripper-wordmark-192.png" alt="FRipper">
+  <h1 class="headline">Original quality.<br>Zero hassle.</h1>
+  <p class="lede">Paste a playlist, album or track. FRipper builds the queue, tracks progress and saves the real files.</p>
+  <div class="window"><div class="bar"><i></i><i></i><i></i><span>FRipper</span></div><img src="../media/screenshot-queue.png" alt=""></div>
+  <div class="foot">
+    <span class="url">github.com/Braxton-Bevis/fripper</span>
+    <span class="cta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M6 10l6 6 6-6M4 21h16"/></svg>Windows · macOS</span>
+  </div>
+</section>
+
+<!-- 3. Flyer -->
+<section class="artboard" id="flyer">
+  <div class="top">
+    <img class="wordmark" src="../../assets/fripper-wordmark-192.png" alt="FRipper">
+    <div class="eyebrow">Fund Ravers</div>
+  </div>
+  <h1 class="headline">Keep the music<br>you love.</h1>
+  <p class="lede">A free desktop app that turns music links into a download queue and saves every track in original quality.</p>
+  <div class="cols">
+    <div class="steps">
+      <div class="step"><b>1</b><div><h3>Paste your links</h3><p>Playlists, albums or tracks, one per line. FRipper detects the service for you.</p></div></div>
+      <div class="step"><b>2</b><div><h3>Pick a source and format</h3><p>Keep original quality, or convert to MP3, FLAC, AAC and more.</p></div></div>
+      <div class="step"><b>3</b><div><h3>Start the queue</h3><p>Watch live progress while your music lands in its own folders.</p></div></div>
+    </div>
+    <div class="features">
+      <div class="feature"><h4>TIDAL, SoundCloud and more</h4><p>Your own TIDAL subscription, SoundCloud, plus Amazon Music and Qobuz through Lucida.</p></div>
+      <div class="feature"><h4>Paced and careful</h4><p>One track at a time, with speed caps and automatic pauses.</p></div>
+      <div class="feature"><h4>Never asks for passwords</h4><p>TIDAL uses its official sign-in. Sessions stay encrypted on your PC.</p></div>
+      <div class="feature"><h4>One-click install</h4><p>The installer sets up everything, and FRipper pins to your taskbar or Dock.</p></div>
+    </div>
+  </div>
+  <div class="bottom">
+    <div class="qr" id="flyer-qr"></div>
+    <div>
+      <h2>Scan to download.</h2>
+      <span class="url">github.com/Braxton-Bevis/fripper</span>
+      <p>Free for Windows 10/11 and macOS 11+.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 4. Story -->
+<section class="artboard" id="story">
+  <img class="icon" src="../../assets/fripper-icon-1024.png" alt="">
+  <img class="wordmark" src="../../assets/fripper-wordmark-192.png" alt="FRipper">
+  <h1 class="headline">Your music.<br>One queue.</h1>
+  <p class="lede">Paste links. Press start. Keep every track in original quality.</p>
+  <div class="window"><div class="bar"><i></i><i></i><i></i><span>FRipper</span></div><img src="../media/screenshot-queue.png" alt=""></div>
+  <div class="foot">
+    <span class="cta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M6 10l6 6 6-6M4 21h16"/></svg>Free for Windows &amp; Mac</span>
+    <span class="swipe">Link in bio</span>
+  </div>
+</section>
+
+<!-- 5. Brand sheet -->
+<section class="artboard" id="brand">
+  <div style="display:grid; gap:36px; align-content:start">
+    <div><h2>Wordmark</h2><div class="tile"><img class="wordmark" style="width:520px" src="../../assets/fripper-wordmark-192.png" alt="FRipper"></div></div>
+    <div><h2>App icon</h2><div class="tile" style="display:flex; gap:34px; align-items:flex-end">
+      <img class="icon" style="width:180px" src="../../assets/fripper-icon-1024.png" alt="">
+      <img class="icon" style="width:96px" src="../../assets/fripper-icon-1024.png" alt="">
+      <img class="icon" style="width:48px; border-radius:10px" src="../../assets/fripper-icon-1024.png" alt="">
+      <img style="width:180px; border-radius:22%; border:1px solid var(--line)" src="../../assets/fundravers-logo.png" alt="">
+    </div></div>
+  </div>
+  <div style="display:grid; gap:36px; align-content:start">
+    <div><h2>Colour</h2><div class="swatches">
+      <div class="swatch"><div style="background:#0b0b0d"></div><p>Night<small>#0B0B0D</small></p></div>
+      <div class="swatch"><div style="background:#17171a"></div><p>Panel<small>#17171A</small></p></div>
+      <div class="swatch"><div style="background:#ffffff"></div><p>Signal<small>#FFFFFF</small></p></div>
+      <div class="swatch"><div style="background:#8fdcb4"></div><p>Done<small>#8FDCB4 · state only</small></p></div>
+    </div></div>
+    <div><h2>Type</h2><div class="tile type">
+      <div class="big">Your music. One queue.</div>
+      <div class="mid">Segoe UI Semibold for labels and actions</div>
+      <div class="small">Segoe UI for body copy. White is reserved for identity and primary actions; colour only ever marks job state.</div>
+    </div></div>
+    <div><h2>Voice</h2><div class="tile"><p class="lede" style="font-size:20px">Direct and calm. Say what happens next: "Paste links. Press start." Never promise what a service does not offer.</p></div></div>
+  </div>
+</section>
+
+<!-- 6. How it works -->
+<section class="artboard" id="steps">
+  <div class="step"><b>1</b><div><h3>Paste links</h3><p>TIDAL, SoundCloud, Amazon Music or Qobuz. One per line, or import a .txt file.</p></div></div>
+  <div class="step"><b>2</b><div><h3>Build the queue</h3><p>FRipper detects the service, groups tracks and albums, and keeps playlist order.</p></div></div>
+  <div class="step"><b>3</b><div><h3>Press start</h3><p>Live progress per track. Files are checked before a job is marked complete.</p></div></div>
+</section>
+
+<script>
+  new QRCode(document.getElementById("flyer-qr"), {
+    text: "https://github.com/Braxton-Bevis/fripper/releases/latest", width: 210, height: 210,
+    colorDark: "#0b0b0d", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.M });
+</script>
+</body>
+</html>
