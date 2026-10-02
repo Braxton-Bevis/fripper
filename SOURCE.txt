@@ -1,0 +1,53 @@
+Source provenance checked October 2, 2026
+
+GUI / queue manager
+  Custom code in this directory, built for the user's local Windows system.
+
+Lucida download engine
+  Project: Jude-A/lucidadl
+  Repository: https://github.com/Jude-A/lucidadl
+  Pinned commit: bf3fa1eb87634b3f60bea787c222351c82ec2f16
+  License: MIT; preserved in vendor/lucidadl/LICENSE when installed.
+  Affiliation: Community client. Its README explicitly disclaims affiliation
+  with lucida.to and with the streaming services it supports.
+  Dependencies: Installed from its pyproject.toml by pip. Installed versions
+  are recorded in installed-packages.txt after successful installation.
+  Browser: Official Playwright Chromium distribution via playwright install.
+  The source is cloned, not a third-party standalone Windows executable.
+
+Direct TIDAL account adapter
+  Project: tidalapi
+  Repository: https://github.com/tamland/python-tidal
+  Package: https://pypi.org/project/tidalapi/0.8.11/
+  Pinned version: 0.8.11
+  Local wrappers: tidal_account.py and tidal_direct.py.
+  Uses device authorization and current-user Windows DPAPI encryption.
+  Protected manifests are explicitly rejected.
+
+Direct SoundCloud adapter
+  Project: yt-dlp
+  Repository: https://github.com/yt-dlp/yt-dlp
+  Package: https://pypi.org/project/yt-dlp/2026.8.19/
+  Pinned version: 2026.8.19
+  Local wrapper: soundcloud_direct.py.
+  Prefers uploader originals, otherwise best available public streams.
+  No browser cookie import.
+
+Audio processing
+  FFmpeg is supplied by imageio-ffmpeg. Mutagen validates audio metadata.
+  Dependency license metadata remains in .venv/Lib/site-packages.
+
+Original Lucida library
+  Package: https://www.npmjs.com/package/lucida
+  Repository listed by publisher: https://git.gay/lucida/lucida
+  Author: hazycora
+  This is a separate modular library requiring streaming-service accounts
+  or tokens. It is not a complete self-hosted copy of lucida.to.
+  The repository returned "Not found" during verification. No official
+  GitHub mirror was verified. The current lucida.to site returned HTTP 403
+  to automated requests, so current site-to-source links could not be checked.
+
+Installation status
+  Presence of .venv and vendor/lucidadl, plus an installed lucidadl command,
+  indicates the community client has been installed. This file records source
+  provenance and does not itself assert that installation or downloads work.

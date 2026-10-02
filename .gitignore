@@ -1,0 +1,7 @@
+.venv/
+.local/
+downloads/
+__pycache__/
+*.pyc
+vendor/
+dist/

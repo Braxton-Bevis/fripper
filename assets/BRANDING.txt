@@ -1,0 +1,16 @@
+FRipper / Fundravers
+
+Use the white FR monogram on black supplied by the user.
+The matching original asset is preserved as fundravers-logo.png.
+Source: https://bamafundravers.com/assets/fr-logo.png
+
+fripper.png and fripper.ico package that artwork for the desktop header,
+window icon, and shortcuts. Rebuild with build_fripper_icons.ps1.
+The logo geometry and colors are preserved; app icons add a white download
+badge (lower right). fripper-icon-1024.png is the macOS icon master.
+The header wordmark (FR mark + "ipper") is built by build_fripper_wordmark.ps1.
+
+Product name: FRipper
+Palette: near-black surfaces, white identity and primary actions.
+Keep Lucida/lucidadl names where they identify the third-party provider.
+Keep the existing instance mutex and state paths for compatibility.
